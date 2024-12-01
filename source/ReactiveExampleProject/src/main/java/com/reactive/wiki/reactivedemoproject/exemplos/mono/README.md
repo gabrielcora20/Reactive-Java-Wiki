@@ -4,22 +4,42 @@
 
 <p style="text-align:center"> Ilustração do fluxo de vida de uma execução reativa através do Mono </p>
 
-# Demonstração
+## Demonstração
+
+### Mono disparando o sinal `OnNext` e `OnComplete`
+
+#### Código fonte:
 
 ```Java
-import com.reactive.wiki.reactivedemoproject.ExemploBase;
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
-
-@Service
-public class MonoExemplo  extends ExemploBase {
+public class MonoEmitindoOnNextEOnCompleteExemplo extends ExemploBase {
 
     @Override
     public void executa() {
-        Mono.just(executaProcessoVerde())
-                .doOnSuccess(resultadoProcessoVerde -> logTesteDeMesa("Resultado do processo verde", resultadoProcessoVerde, obtemNomeMetodoEmExecucao()))
-                .doOnError(error -> logTesteDeMesa("Resultado do processo verde", error, obtemNomeMetodoEmExecucao()))
-                .subscribe();
+        executaProcessoVerde()
+                .subscribe(resultadoProcessoVerde -> logTesteDeMesa("OnNext do processo verde disparado", resultadoProcessoVerde, obtemNomeMetodoEmExecucao()),
+                        erro -> logTesteDeMesa("OnError do processo verde disparado", erro, obtemNomeMetodoEmExecucao()),
+                        () -> logTesteDeMesa("OnComplete do processo verde disparado", null, obtemNomeMetodoEmExecucao()));
+    }
+
+    private Mono<Boolean> executaProcessoVerde() {
+        return Mono.just(true);
+    }
+}
+```
+
+### Mono disparando o sinal `OnError`
+
+#### Código fonte:
+
+```Java
+public class MonoEmitindoOnErrorExemplo extends ExemploBase {
+
+    @Override
+    public void executa() {
+        executaProcessoVerde()
+                .subscribe(resultadoProcessoVerde -> logTesteDeMesa("OnNext do processo verde disparado", resultadoProcessoVerde, obtemNomeMetodoEmExecucao()),
+                        erro -> logTesteDeMesa("OnError do processo verde disparado", erro, obtemNomeMetodoEmExecucao()),
+                        () -> logTesteDeMesa("OnComplete do processo verde disparado", null, obtemNomeMetodoEmExecucao()));
     }
 
     private Mono<Boolean> executaProcessoVerde() {
@@ -28,8 +48,43 @@ public class MonoExemplo  extends ExemploBase {
 }
 ```
 
-# Resultado da execução do exemplo
+### Mono sem subscribe
 
-| Identificador               | Valor                                       |
-| --------------------------- | ------------------------------------------- |
-| Resultado do processo verde | java.lang.Exception: Erro no processo verde |
+#### Código fonte:
+
+```Java
+public class MonoSemSubscribeExemplo extends ExemploBase {
+
+    @Override
+    public void executa() {
+        executaProcessoVerde();
+    }
+
+    private Mono<Boolean> executaProcessoVerde() {
+        return Mono.just(true);
+    }
+}
+```
+
+### Mono disparando o sinal `OnNext` e `OnComplete` utilizando múltiplos operadores
+
+#### Código fonte:
+
+```Java
+public class MonoEmitindoOnNextEOnCompleteComMultiplosOperadoresExemplo extends ExemploBase {
+
+    @Override
+    public void executa() {
+        executaProcessoVerde()
+                .subscribe(resultadoProcessoVerde -> logTesteDeMesa("OnNext do processo verde disparado", resultadoProcessoVerde, obtemNomeMetodoEmExecucao()),
+                        erro -> logTesteDeMesa("OnError do processo verde disparado", erro, obtemNomeMetodoEmExecucao()),
+                        () -> logTesteDeMesa("OnComplete do processo verde disparado", null, obtemNomeMetodoEmExecucao()));
+    }
+
+    private Mono<Boolean> executaProcessoVerde() {
+        return Mono.just(true)
+                .flatMap(resultadoProcessoVerde -> Mono.just(false))
+                .flatMap(resultadoProcessoVerde -> Mono.just(true));
+    }
+}
+```
